@@ -1,0 +1,503 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>藏族天文历算系统</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', 'SimHei', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+        .navbar {
+            background: #2c3e50;
+            padding: 15px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            justify-content: center;
+        }
+        .nav-btn {
+            background: #3498db;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            font-size: 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        .nav-btn span.tibetan {
+            font-size: 24px;
+            font-family: 'Microsoft Himalaya', 'Noto Serif Tibetan', 'Kailasa', serif;
+        }
+        .nav-btn:nth-child(2) { background: #e67e22; }
+        .nav-btn:nth-child(3) { background: #27ae60; }
+        .nav-btn:nth-child(4) { background: #e84393; }
+        .header {
+            background: linear-gradient(135deg, #8B1C1C 0%, #c0392b 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        .header .tibetan-title {
+            font-size: 56px;
+            font-family: 'Microsoft Himalaya', 'Noto Serif Tibetan', 'Kailasa', serif;
+            margin-bottom: 15px;
+            letter-spacing: 5px;
+        }
+        .header h1 {
+            font-size: 28px;
+            margin-bottom: 10px;
+        }
+        .main-tibetan-title {
+            font-size: 52px;
+            font-family: 'Microsoft Himalaya', 'Noto Serif Tibetan', 'Kailasa', serif;
+            color: #c0392b;
+            margin-top: 20px;
+            letter-spacing: 4px;
+            font-weight: bold;
+        }
+        .content { padding: 30px; min-height: 500px; }
+        .page { display: none; animation: fadeIn 0.3s ease; }
+        .page.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        .section {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        .section-title {
+            font-size: 18px;
+            font-weight: bold;
+            color: #d35400;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #ddd;
+        }
+        .section-title span.tibetan {
+            font-size: 24px;
+            font-family: 'Microsoft Himalaya', 'Noto Serif Tibetan', 'Kailasa', serif;
+        }
+        .input-group {
+            margin-bottom: 15px;
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 10px;
+        }
+        .input-group label {
+            font-weight: bold;
+            min-width: 100px;
+        }
+        .input-group label span.tibetan {
+            font-size: 22px;
+            font-family: 'Microsoft Himalaya', 'Noto Serif Tibetan', 'Kailasa', serif;
+        }
+        .input-group input, .input-group select {
+            flex: 1;
+            min-width: 150px;
+            padding: 10px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 14px;
+        }
+        button {
+            background: #e67e22;
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            font-size: 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            margin: 5px;
+        }
+        button span.tibetan {
+            font-size: 22px;
+            font-family: 'Microsoft Himalaya', 'Noto Serif Tibetan', 'Kailasa', serif;
+        }
+        button:hover { transform: translateY(-2px); opacity: 0.9; }
+        .result {
+            margin-top: 20px;
+            padding: 15px;
+            background: white;
+            border-radius: 10px;
+            border-left: 4px solid #e67e22;
+            font-size: 16px;
+            line-height: 1.8;
+            word-break: break-all;
+        }
+        .result span.tibetan {
+            font-size: 22px;
+            font-family: 'Microsoft Himalaya', 'Noto Serif Tibetan', 'Kailasa', serif;
+            line-height: 1.8;
+        }
+        .footer {
+            background: #f8f9fa;
+            padding: 15px;
+            text-align: center;
+            color: #666;
+            font-size: 12px;
+        }
+        @media (max-width: 600px) {
+            .navbar { flex-direction: column; }
+            .nav-btn { width: 100%; }
+            .input-group { flex-direction: column; align-items: flex-start; }
+            .input-group input { width: 100%; }
+            .header .tibetan-title { font-size: 40px; }
+            .main-tibetan-title { font-size: 36px; }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="navbar">
+        <button class="nav-btn" onclick="showPage('main')"><span class="tibetan">མ་ཐོ་གཙོ་བོ་</span>（菜单栏）</button>
+        <button class="nav-btn" onclick="showPage('year')"><span class="tibetan">ལོའི་རྩིས་རྒྱག་</span>（年系统）</button>
+        <button class="nav-btn" onclick="showPage('month')"><span class="tibetan">ཟླ་བའི་རྩིས་རྒྱག་</span>（月系统）</button>
+        <button class="nav-btn" onclick="showPage('date')"><span class="tibetan">ཉིན་གྱི་རྩིས་རྒྱག་</span>（日系统）</button>
+    </div>
+    <div class="header">
+        <div class="tibetan-title">བོད་ཀྱི་ལོ་ཚེས་རྩིས་འཁོར།</div>
+        <h1>藏族天文历算系统</h1>                              
+    </div>
+    
+    <div id="mainPage" class="content page active">
+        <div style="text-align:center; padding:40px">
+            <img src="Tou.jpg" style="width:200px; height:200px; margin-bottom:20px; border-radius:75px; object-fit:cover;">
+            <div class="main-tibetan-title">བོད་ཀྱི་ལོ་ཚེས་རྩིས་འཁོར།</div>
+            <p style="margin-top:20px; color:#666;"></p>
+        </div>
+    </div>
+    
+    <div id="yearPage" class="content page">
+        <div class="section">
+            <div class="section-title"><span class="tibetan">༡ སྤྱི་ལོ་ནས་རབ་ལོ།</span>（公历到饶迥）</div>
+            <div class="input-group"><label><span class="tibetan">སྤྱི་ལོ་</span>（公历）:</label><input type="number" id="year1" value="2025"></div>
+            <button onclick="calc_year1()"><span class="tibetan">རྩིས།</span>（计算）</button>
+            <div id="yearRes1" class="result"></div>
+        </div>
+        <div class="section">
+            <div class="section-title"><span class="tibetan">༢ རབ་ལོ་ནས་སྤྱི་ལོ།</span>（饶迥到公历）</div>
+            <div class="input-group"><label><span class="tibetan">རབ་བྱུང་</span>（饶迥）:</label><input type="number" id="rabjung" value="17"></div>
+            <div class="input-group"><label><span class="tibetan">རབ་བྱུང་གི་ལོ་ཚིག</span>（甲子年的名称）:</label><input type="text" id="cycleName" value="ཤིང་སྦྲུལ་"></div>
+            <button onclick="calc_year2()"><span class="tibetan">རྩིས།</span>（计算）</button>
+            <div id="yearRes2" class="result"></div>
+        </div>
+    </div>
+    
+    <div id="monthPage" class="content page">
+        <div class="input-group"><label><span class="tibetan">ལོ་</span>（公历）:</label><input type="number" id="monthY" value="2025"><label><span class="tibetan">བོད་ཟླ་</span>（藏历月份）:</label><input type="number" id="monthM" value="6"></div>
+        <div class="section"><div class="section-title"><span class="tibetan">༡ ཟླ་བཤོལ་གྱི་བརྡར་གཅོད།</span>（闰月的判断）</div><button onclick="calc_month1()"><span class="tibetan">རྩིས།</span>（计算）</button><div id="monthRes1" class="result"></div></div>
+        <div class="section"><div class="section-title"><span class="tibetan">༢ ཟླ་དག་དང་བཤོལ་འཕྲོ་རྩི་བ་</span>（积月和闰余）</div><button onclick="calc_month2()"><span class="tibetan">རྩིས།</span>（计算）</button><div id="monthRes2" class="result"></div></div>
+        <div class="section"><div class="section-title"><span class="tibetan">༣ ཉི་དྷྲུ་རྩི་བ།</span>（日曜基数）</div><button onclick="calc_month3()"><span class="tibetan">རྩིས།</span>（计算）</button><div id="monthRes3" class="result"></div></div>
+        <div class="section"><div class="section-title"><span class="tibetan">༤ རིལ་པོ་དང་ཆ་ཤས་རྩི་བ།</span>（整数零数）</div><button onclick="calc_month4()"><span class="tibetan">རྩིས།</span>（计算）</button><div id="monthRes4" class="result"></div></div>
+        <div class="section"><div class="section-title"><span class="tibetan">༥ གཟའ་དྷྲུ་རྩི་བ།</span>（曜基数）</div><button onclick="calc_month5()"><span class="tibetan">རྩིས།</span>（计算）</button><div id="monthRes5" class="result"></div></div>
+    </div>
+    
+    <div id="datePage" class="content page">
+        <div class="input-group"><label><span class="tibetan">ལོ་</span>（公历）:</label><input type="number" id="dateY" value="2025"><label><span class="tibetan">བོད་ཟླ་</span>（藏历月份）:</label><input type="number" id="dateM" value="6"><label><span class="tibetan">བོད་ཚེས་</span>（藏历日期）:</label><input type="number" id="dateD" value="18"></div>
+        <div class="section"><div class="section-title"><span class="tibetan">༡ གཟའ་ཡིས་རྩིས།</span>（星期的判断）</div><button onclick="calc_date1()"><span class="tibetan">རྩིས།</span>（计算）</button><div id="dateRes1" class="result"></div></div>
+        <div class="section"><div class="section-title"><span class="tibetan">༢ གཟའ་དག་རྩི་བ།</span>（定曜）</div><button onclick="calc_date2()"><span class="tibetan">རྩིས།</span>（计算）</button><div id="dateRes2" class="result"></div></div>
+        <div class="section"><div class="section-title"><span class="tibetan">༣ ཞག་ཆད་དང་ཞག་ལྷག་བརྡར་གཅོད།</span>（缺日、重日的判断）</div><button onclick="calc_date3()"><span class="tibetan">རྩིས།</span>（计算）</button><div id="dateRes3" class="result"></div></div>
+    </div>
+    
+    <div class="footer">བོད་ཀྱི་སྐར་རྩིས་རང་འགུལ་རྩིས་རྒྱག་མ་ལག།</div>
+</div>
+
+<script>
+// ==================== 常量定义 ====================
+const symbols1 = {
+    1: "མེ་ཡོས་", 2: "ས་འབྲུག་", 3: "ས་སྦྲུལ་", 4: "ལྕགས་རྟ་", 5: "ལྕགས་ལུག་", 
+    6: "ཆུ་སྤྲེལ་", 7: "ཆུ་བྱ་", 8: "ཤིང་ཁྱི་", 9: "ཤིང་ཕག་", 10: "མེ་བྱི་", 
+    11: "མེ་གླང་", 12: "ས་སྟག་", 13: "ས་ཡོས་", 14: "ལྕགས་འབྲུག་", 15: "ལྕགས་སྦྲུལ་", 
+    16: "ཆུ་རྟ་", 17: "ཆུ་ལུག་", 18: "ཤིང་སྤྲེལ་", 19: "ཤིང་བྱ་", 20: "མེ་ཁྱི་", 
+    21: "མེ་ཕག་", 22: "ས་བྱི་", 23: "ས་གླང་", 24: "ལྕགས་སྟག་", 25: "ལྕགས་ཡོས་", 
+    26: "ཆུ་འབྲུག་", 27: "ཆུ་སྦྲུལ་", 28: "ཤིང་རྟ་", 29: "ཤིང་ལུག་", 30: "མེ་སྤྲེལ་", 
+    31: "མེ་བྱ་", 32: "ས་ཁྱི་", 33: "ས་ཕག་", 34: "ལྕགས་བྱི་", 35: "ལྕགས་གླང་", 
+    36: "ཆུ་སྟག་", 37: "ཆུ་ཡོས་", 38: "ཤིང་འབྲུག་", 39: "ཤིང་སྦྲུལ་", 40: "མེ་རྟ་", 
+    41: "མེ་ལུག་", 42: "ས་སྤྲེལ་", 43: "ས་བྱ་", 44: "ལྕགས་ཁྱི་", 45: "ལྕགས་ཕག་", 
+    46: "ཆུ་བྱི་", 47: "ཆུ་གླང་", 48: "ཤིང་སྟག་", 49: "ཤིང་ཡོས་", 50: "མེ་འབྲུག་", 
+    51: "མེ་སྦྲུལ་", 52: "ས་རྟ་", 53: "ས་ལུག་", 54: "ལྕགས་སྤྲེལ་", 55: "ལྕགས་བྱ་", 
+    56: "ཆུ་ཁྱི་", 57: "ཆུ་ཕག་", 58: "ས་བྱི་", 59: "ས་གླང་", 60: "མེ་སྟག་"
+}
+
+const symbols2 = {
+    1: "དང་པོའི་", 2: "གཉིས་པའི་", 3: "གསུམ་པའི་", 4: "བཞི་པའི་", 5: "ལྔ་པའི་", 
+    6: "དྲུག་པའི་", 7: "བདུན་པའི་", 8: "བརྒྱད་པའི་", 9: "དགུ་པའི་", 10: "བཅུ་པའི་",11:"བཅུ་གཅུག་པའི་",12:"བཅུ་གཉིས་པའི་  ",
+    13:"བཅུ་གསུམ་པའི་",14:"བཅུ་བཞི་པའི་",15:"བཅུ་ལྔ་པའི་",16:"བཅུ་དྲུག་པའི་",17:" བཅུ་བདུན་པའི་",18:"བཅུ་བརྒྱད་པའི་ ",19:"བཅུ་དགུ་པའི་",20:"ཉི་ཤུ་པའི་",21:"ཉེར་གཅིག་པའི་",22:"ཉེར་གཉིས་པའི་",
+   23:" ཉེར་གསུམ་པའི་ ",24:"ཉེར་བཞི་པའི་ ",25:"ཉེར་ལྔ་པའི་",  26:"ཉེར་དྲུག་པའི་ ",27:"ཉེར་བདུན་པའི་",28:"ཉེར་བརྒྱད་པའི་",29:" ཉེར་དགུ་པའི་ ",30:"སུམ་ཅུ་པའི་",31:  "སོ་གཅིག་པའི་ ",32:"སོ་གཉིས་པའི་",
+    33:"སོ་གསུམ་པའི་",34:"སོ་བཞི་པའི་ ",35:"སོ་ལྔ་པའི་ "
+} 
+
+const symbols3 = {
+    0: "སྤིན་པ་", 1: "ཉི་མ་", 2: "ཟླ་བ་", 3: "མིག་དམར་", 
+    4: "ལྷག་པ་", 5: "ཕུར་བུ་", 6: "པ་སངས་"
+}
+
+// ==================== 分数计算函数 ====================
+function JS3(x1, x2, y2) { return x1 + (x2 / y2); }
+function JS2(x0, x1, x2, x3, x4, y1, y2, y3, y4) {
+    return x0 + (x1 / y1) + (x2 / (y1 * y2)) + (x3 / (y1 * y2 * y3)) + (x4 / (y1 * y2 * y3 * y4));
+}
+function JS33(x1, x2, y1, y2) { return (x1 / y1) + (x2 / (y1 * y2)); }
+function JS22(x0, x1, x2, x3, x4, y1, y2, y3, y4) {
+    return x0 + (x1 / y1) + (x2 / (y1 * y2)) + (x3 / (y1 * y2 * y3)) + (x4 / (y1 * y2 * y3 * y4));
+}
+function JS11(x1, x2, x3, x4, x5, y1, y2, y3, y4, y5) {
+    return (x1 / y1) + (x2 / (y1 * y2)) + (x3 / (y1 * y2 * y3)) + (x4 / (y1 * y2 * y3 * y4)) + (x5 / (y1 * y2 * y3 * y4 * y5));
+}
+
+// ==================== 初始化参数 ====================
+const a1 = JS3(2, 1, 126);
+const s1 = JS2(2, 10, 58, 1, 17, 60, 60, 6, 67);
+const m1 = JS2(29, 31, 50, 0, 480, 60, 60, 6, 707);
+const a2 = JS3(1, 0, 126);
+const s2 = JS2(0, 4, 21, 5, 43, 60, 60, 6, 67);
+const m2 = JS2(0, 59, 3, 4, 16, 60, 60, 6, 707);
+const a0 = JS3(5, 59, 126);
+const s0 = JS2(25, 49, 28, 3, 63, 60, 60, 6, 67);
+const m0 = JS2(0, 28, 13, 4, 166, 60, 60, 6, 707);
+const a11 = JS33(2, 1, 28, 126);
+const s11 = JS11(2, 10, 58, 1, 17, 27, 60, 60, 6, 67);
+const m11 = JS22(29, 31, 50, 0, 480, 60, 60, 6, 707);
+const a22 = JS33(1, 0, 28, 126);
+const s22 = JS11(0, 4, 21, 5, 43, 27, 60, 60, 6, 67);
+const m22 = JS22(0, 59, 3, 4, 16, 60, 60, 6, 707);
+const a00 = JS33(5, 59, 28, 126);
+const s00 = JS11(25, 49, 28, 3, 63, 27, 60, 60, 6, 67);
+const m00 = JS22(0, 28, 13, 4, 166, 60, 60, 6, 707);
+
+// ==================== 页面切换 ====================
+function showPage(page) {
+    document.getElementById('mainPage').classList.remove('active');
+    document.getElementById('yearPage').classList.remove('active');
+    document.getElementById('monthPage').classList.remove('active');
+    document.getElementById('datePage').classList.remove('active');
+    document.getElementById(page + 'Page').classList.add('active');
+}
+
+// ==================== 年计算1：公历转藏历 ====================
+function calc_year1() {
+    try {
+        let Y = parseInt(document.getElementById('year1').value);
+        let m = Math.ceil((Y - 966) / 60) - 1;
+        let n = ((Y - 966 - 1) % 60 + 60) % 60 + 1;
+        let symbol1 = symbols1[n] || "ཚོན་རྟགས།";
+        let symbol2 = symbols2[m] || "ཚོན་རྟགས།";
+        let result = `སྤྱི་ལོ་${Y}ནི་རབ་བྱུང་${symbol2}${symbol1}ལོ།`;
+        document.getElementById('yearRes1').innerHTML = '📌 <span class="tibetan">' + result + '</span>';
+    } catch(e) { document.getElementById('yearRes1').innerHTML = '❌ 错误：' + e.message; }
+}
+
+// ==================== 年计算2：藏历转公历 ====================
+function calc_year2() {
+    try {
+        let m1 = parseInt(document.getElementById('rabjung').value);
+        let symbol1 = document.getElementById('cycleName').value;
+        let n1 = null;
+        for (let key in symbols1) { if (symbols1[key] === symbol1) { n1 = parseInt(key); break; } }
+        let n = n1;
+        let Y = 60 * m1 + n + 966;
+        let result = `རབ་བྱུང་${m1}${symbol1}ལོ་ནི་སྤྱི་ལོ་${Y}`;
+        document.getElementById('yearRes2').innerHTML = '📌 <span class="tibetan">' + result + '</span>';
+    } catch(e) { document.getElementById('yearRes2').innerHTML = '❌ 错误：' + e.message; }
+}
+
+// ==================== 月计算1：基础月份信息 ====================
+function calc_month1() {
+    try {
+        let Y = parseInt(document.getElementById('monthY').value);
+        let M = parseInt(document.getElementById('monthM').value);
+        let M0 = 3, Y0 = 1027, beta = 35;
+        let Mster = 12 * (Y - Y0) + (M - M0);
+        let result;
+        if ((2 * Mster + beta) % 65 == 48 || (2 * Mster + beta) % 65 == 49) {
+            result = `${Y}ལོའི་ཟླ་བ་${M}ནི་ཟླ་བཤོལ་ཡིན།`;
+        } else {
+            result = `${Y}ལོའི་ཟླ་བ་${M}ནི་ཟླ་བཤོལ་མིན།`;
+        }
+        document.getElementById('monthRes1').innerHTML = '📌 <span class="tibetan">' + result + '</span>';
+    } catch(e) { document.getElementById('monthRes1').innerHTML = '❌ 错误：' + e.message; }
+}
+
+// ==================== 月计算2：平闰月信息 ====================
+function calc_month2() {
+    try {
+        let Y = parseInt(document.getElementById('monthY').value);
+        let M = parseInt(document.getElementById('monthM').value);
+        let M0 = 3, Y0 = 1987, beta = 0;
+        let Mster = 12 * (Y - Y0) + (M - M0);
+        let n = Math.floor((67 * Mster + beta + 17) / 65);
+        let b = (2 * Mster) % 65;
+        let result = `ཟླ་དག་དང་བཤོལ་འཕྲོ་: ${n},${b}`;
+        document.getElementById('monthRes2').innerHTML = '📌 <span class="tibetan">' + result + '</span>';
+    } catch(e) { document.getElementById('monthRes2').innerHTML = '❌ 错误：' + e.message; }
+}
+
+// ==================== 月计算3：太阳位置 ====================
+function calc_month3() {
+    try {
+        let Y = parseInt(document.getElementById('monthY').value);
+        let M = parseInt(document.getElementById('monthM').value);
+        let M0 = 3, Y0 = 1027, beta = 35;
+        let Mster = 12 * (Y - Y0) + (M - M0);
+        let Z2 = (Math.floor((67 * Mster + beta + 17) / 65) * s1 + s0);
+        let k2 = (Z2 - Math.floor(Z2)) * 60;
+        let f2 = (k2 - Math.floor(k2)) * 60;
+        let j2 = (f2 - Math.floor(f2)) * 6;
+        let i2 = (j2 - Math.floor(j2)) * 67+1;
+        let result = `ཉི་དྷྲུ་: ${Math.floor(Z2) % 27}, ${Math.floor(k2)}, ${Math.floor(f2)}, ${Math.floor(j2)}, ${Math.floor(i2)}`;
+        document.getElementById('monthRes3').innerHTML = '📌 <span class="tibetan">' + result + '</span>';
+    } catch(e) { document.getElementById('monthRes3').innerHTML = '❌ 错误：' + e.message; }
+}
+
+// ==================== 月计算4：月亮位置 ====================
+function calc_month4() {
+    try {
+        let Y = parseInt(document.getElementById('monthY').value);
+        let M = parseInt(document.getElementById('monthM').value);
+        let M0 = 3, Y0 = 1027, beta = 35;
+        let Mster = 12 * (Y - Y0) + (M - M0);
+        let Z1 = (Math.floor((67 * Mster + beta + 17) / 65) * a1 + a0);
+        let k1 = (Z1 - Math.floor(Z1)) * 126+1;
+        let result = `རིལ་པོ་དང་ཆ་ཤས་: ${Math.floor(Z1) % 28}, ${Math.floor(k1)}`;
+        document.getElementById('monthRes4').innerHTML = '📌 <span class="tibetan">' + result + '</span>';
+    } catch(e) { document.getElementById('monthRes4').innerHTML = '❌ 错误：' + e.message; }
+}
+
+// ==================== 月计算5：星期信息 ====================
+function calc_month5() {
+    try {
+        let Y = parseInt(document.getElementById('monthY').value);
+        let M = parseInt(document.getElementById('monthM').value);
+        let M0 = 3, Y0 = 1027, beta = 35;
+        let Mster = 12 * (Y - Y0) + (M - M0);
+        let Z = (Math.floor((67 * Mster + beta + 17) / 65) * m1 + m0);
+        let w = (Math.floor(Z) - 1) % 7;
+        let k = (Z - Math.floor(Z)) * 60;
+        let f = (k - Math.floor(k)) * 60;
+        let j = (f - Math.floor(f)) * 6;
+        let i = (j - Math.floor(j)) * 707+1;
+        let result = `གཟའ་དྷྲུ་: ${w}, ${Math.floor(k)}, ${Math.floor(f)}, ${Math.floor(j)}, ${Math.floor(i)}`;
+        document.getElementById('monthRes5').innerHTML = '📌 <span class="tibetan">' + result + '</span>';
+    } catch(e) { document.getElementById('monthRes5').innerHTML = '❌ 错误：' + e.message; }
+}
+
+// ==================== 日计算1：基础日期信息 ====================
+function calc_date1() {
+    try {
+        let Y = parseInt(document.getElementById('dateY').value);
+        let M = parseInt(document.getElementById('dateM').value);
+        let d = parseInt(document.getElementById('dateD').value);
+        let M0 = 3, Y0 = 1027, beta = 35;
+        function end(Y, M, d) {
+            function anomaly_moon(Y, M, d) {
+                let raw = Math.floor((67 * (12 * (Y - Y0) + (M - M0)) + beta + 17) / 65) * a11 + d * a22 + a00;
+                return raw % 1;
+            }
+            function anomaly_sun(Y, M, d) {
+                let raw = Math.floor((67 * (12 * (Y - Y0) + (M - M0)) + beta + 17) / 65) * s11 + d * s22 + s00 - JS11(6, 45, 0, 0, 0, 27, 60, 60, 6, 67);
+                return raw % 1;
+            }
+            function moon(Y, M, d) { let x = anomaly_moon(Y, M, d) % 1; return 25 * Math.sin(2 * Math.PI * x); }
+            function sun(Y, M, d) { let x = anomaly_sun(Y, M, d) % 1; return 11 * Math.sin(2 * Math.PI * x); }
+            return Math.floor((67 * (12 * (Y - Y0) + (M - M0)) + beta + 17) / 65) * m11 + d * m22 + m00 + moon(Y, M, d) / 60 - sun(Y, M, d) / 60;
+        }
+        let week = (Math.floor(end(Y, M, d)) - 1) % 7;
+        let symbol1 = symbols3[week] || "ཚོན་རྟགས།";
+        let result = `${Y}ལོའི་ཟླ་བ་${M}ཚེས་${d}ནི་གཟའ་${symbol1}ཡིན།`;
+        document.getElementById('dateRes1').innerHTML = '📌 <span class="tibetan">' + result + '</span>';
+    } catch(e) { document.getElementById('dateRes1').innerHTML = '❌ 错误：' + e.message; }
+}
+
+// ==================== 日计算2：详细时间信息 ====================
+function calc_date2() {
+    try {
+        let Y = parseInt(document.getElementById('dateY').value);
+        let M = parseInt(document.getElementById('dateM').value);
+        let d = parseInt(document.getElementById('dateD').value);
+        let M0 = 3, Y0 = 1027, beta = 35;
+        function end(Y, M, d) {
+            function anomaly_moon(Y, M, d) {
+                let raw = Math.floor((67 * (12 * (Y - Y0) + (M - M0)) + beta + 17) / 65) * a11 + d * a22 + a00;
+                return raw % 1;
+            }
+            function anomaly_sun(Y, M, d) {
+                let raw = Math.floor((67 * (12 * (Y - Y0) + (M - M0)) + beta + 17) / 65) * s11 + d * s22 + s00 - JS11(6, 45, 0, 0, 0, 27, 60, 60, 6, 67);
+                return raw % 1;
+            }
+            function moon(Y, M, d) { let x = anomaly_moon(Y, M, d) % 1; return 25 * Math.sin(2 * Math.PI * x); }
+            function sun(Y, M, d) { let x = anomaly_sun(Y, M, d) % 1; return 11 * Math.sin(2 * Math.PI * x); }
+            return Math.floor((67 * (12 * (Y - Y0) + (M - M0)) + beta + 17) / 65) * m11 + d * m22 + m00 + moon(Y, M, d) / 60 - sun(Y, M, d) / 60;
+        }
+        let week = (Math.floor(end(Y, M, d)) - 1) % 7;
+        let k = (end(Y, M, d) - Math.floor(end(Y, M, d))) * 60;
+        let f2 = (k - Math.floor(k)) * 60;
+        let result = `གཟའ་དག་: ${week} ${Math.floor(k)} ${Math.floor(f2)}`;
+        document.getElementById('dateRes2').innerHTML = '📌 <span class="tibetan">' + result + '</span>';
+    } catch(e) { document.getElementById('dateRes2').innerHTML = '❌ 错误：' + e.message; }
+}
+
+// ==================== 日计算3：特殊日期判断 ====================
+function calc_date3() {
+    try {
+        let Y = parseInt(document.getElementById('dateY').value);
+        let M = parseInt(document.getElementById('dateM').value);
+        let d = parseInt(document.getElementById('dateD').value);
+        let M0 = 3, Y0 = 1027, beta = 35;
+        function end(Y, M, d) {
+            function anomaly_moon(Y, M, d) {
+                let raw = Math.floor((67 * (12 * (Y - Y0) + (M - M0)) + beta + 17) / 65) * a11 + d * a22 + a00;
+                return raw % 1;
+            }
+            function anomaly_sun(Y, M, d) {
+                let raw = Math.floor((67 * (12 * (Y - Y0) + (M - M0)) + beta + 17) / 65) * s11 + d * s22 + s00 - JS11(6, 45, 0, 0, 0, 27, 60, 60, 6, 67);
+                return raw % 1;
+            }
+            function moon(Y, M, d) { let x = anomaly_moon(Y, M, d) % 1; return 25 * Math.sin(2 * Math.PI * x); }
+            function sun(Y, M, d) { let x = anomaly_sun(Y, M, d) % 1; return 11 * Math.sin(2 * Math.PI * x); }
+            return Math.floor((67 * (12 * (Y - Y0) + (M - M0)) + beta + 17) / 65) * m11 + d * m22 + m00 + moon(Y, M, d) / 60 - sun(Y, M, d) / 60;
+        }
+        function w(Y, M, d) { return (Math.floor(end(Y, M, d)) - 1) % 7; }
+        let result;
+        if (d == 1) {
+            if (w(Y, M, d) == w(Y, M - 1, 30)) {
+                result = `ཚེས་${d}ཆད།`;
+            } else if (w(Y, M, d) == w(Y, M - 1, 30) + 2 || w(Y, M, d) + 5 == w(Y, M - 1, 30)) {
+                result = `ཚེས་${d}ལྷག།`;
+            } else if (w(Y, M, d) == w(Y, M - 1, 30) + 1) {
+                result = `ཚེས་${d}ཆད་ལྷག་མེད།`;
+            } else {
+                result = `ཚེས་${d}计算结果异常`;
+            }
+        } else {
+            if (w(Y, M, d - 1) == w(Y, M, d)) {
+                result = `ཚེས་${d}ཆད།`;
+            } else if (w(Y, M, d - 1) + 2 == w(Y, M, d) || w(Y, M, d - 1) == w(Y, M, d) + 5) {
+                result = `ཚེས་${d}ལྷག།`;
+            } else if (w(Y, M, d - 1) + 1 == w(Y, M, d)) {
+                result = `ཚེས་${d}ཆད་ལྷག་མེད།`;
+            } else {
+                result = `ཚེས་${d}计算结果异常`;
+            }
+        }
+        document.getElementById('dateRes3').innerHTML = '📌 <span class="tibetan">' + result + '</span>';
+    } catch(e) { document.getElementById('dateRes3').innerHTML = '❌ 错误：' + e.message; }
+}
+</script>
+</body>
+</html>
